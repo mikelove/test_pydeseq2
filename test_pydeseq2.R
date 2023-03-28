@@ -1,0 +1,10 @@
+library(DESeq2)
+set.seed(1)
+dds <- makeExampleDESeqDataSet(n=1000, m=8, betaSD=rep(0:1,c(900,100)), interceptMean=8,
+                               dispMeanRel=function(x) .1/x + 10^(rnorm(1000,-2,1)))
+dds <- DESeq(dds)
+res <- results(dds)
+counts <- t(counts(dds))
+coldata <- as.data.frame(colData(dds)[,1,drop=FALSE])
+write.csv(counts, file="counts_df.csv", quote=FALSE)
+write.csv(coldata, file="clinical_df.csv", quote=FALSE)
