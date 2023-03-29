@@ -1,18 +1,20 @@
 library(DESeq2)
 set.seed(1)
-dds <- makeExampleDESeqDataSet(n=1000, m=8, betaSD=rep(0:1,c(900,100)), interceptMean=8,
-#                               dispMeanRel=function(x) .1/x + 10^(rnorm(1000,-4,2)))
-                               dispMeanRel=function(x) .1/x + 10^(rnorm(1000,-4,.5)))
-
-keep <- rowSums(counts(dds) >= 10) >= 4
+dds <- makeExampleDESeqDataSet(n=1000, m=12, betaSD=rep(0:1,c(400,100)),
+                               interceptMean=8, interceptSD=1,
+                               dispMeanRel=function(x) 5/x + 10^(rnorm(1000,-2,1)))
+                               
+keep <- rowSums(counts(dds) >= 10) >= 6
 table(keep)
 dds <- dds[keep,]
 
 dds <- estimateSizeFactors(dds)
-dds <- estimateDispersions(dds)
+dds <- estimateDispersionsGeneEst(dds, alphaInit=1)
+dds <- estimateDispersionsFit(dds)
+dds <- estimateDispersionsMAP(dds)
 plotDispEsts(dds)
 
-dds <- DESeq(dds)
+dds <- nbinomWaldTest(dds)
 res <- results(dds)
 lfc <- lfcShrink(dds, coef=2, quiet=TRUE)
 
@@ -36,11 +38,18 @@ head(disps)
 
 plotDispEsts(dds)
 plot(res$baseMean, disps$gene, log="xy", cex=.2)
-points(res$baseMean, disps$fitted, col="red")
-points(res$baseMean, disps$map, col="dodgerblue")
+points(res$baseMean, disps$fitted, col="red", cex=.2)
+points(res$baseMean, disps$map, col="dodgerblue", cex=.2)
+
+plot(mcols(dds)$dispGeneEst, disps$gene, log="xy");abline(0,1)
+plot(mcols(dds)$dispMAP, disps$map, log="xy");abline(0,1)
 
 pyres <- read.csv("fitted_results_table.csv", row.names=1)
 res
+head(pyres)
+plot(res$stat, pyres$stat); abline(0,1)
 
 pylfc <- read.csv("fitted_shrunken_lfc.csv", row.names=1)
 lfc
+head(pylfc)
+plot(lfc$log2FoldChange, pylfc$log2FoldChange); abline(0,1)
