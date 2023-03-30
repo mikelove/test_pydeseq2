@@ -1,9 +1,16 @@
 library(DESeq2)
-set.seed(1)
-dds <- makeExampleDESeqDataSet(n=1000, m=12, betaSD=rep(0:1,c(400,100)),
+# nearly identical results
+set.seed(3)
+dds <- makeExampleDESeqDataSet(n=1000, m=12, betaSD=rep(0:1,c(900,100)),
                                interceptMean=8, interceptSD=1,
                                dispMeanRel=function(x) 5/x + 10^(rnorm(1000,-2,1)))
-                               
+# testing divergence
+set.seed(1)
+dds <- makeExampleDESeqDataSet(n=1000, m=8, betaSD=rep(0:1,c(900,100)),
+                               interceptMean=7, interceptSD=2,
+                               dispMeanRel=function(x) .1/x + 10^(rnorm(1000,-4,1)))
+
+
 keep <- rowSums(counts(dds) >= 10) >= 6
 table(keep)
 dds <- dds[keep,]
@@ -39,7 +46,7 @@ head(disps)
 plotDispEsts(dds)
 plot(res$baseMean, disps$gene, log="xy", cex=.2)
 points(res$baseMean, disps$fitted, col="red", cex=.2)
-points(res$baseMean, disps$map, col="dodgerblue", cex=.2)
+points(res$baseMean, disps$map, col="dodgerblue", cex=1)
 
 plot(mcols(dds)$dispGeneEst, disps$gene, log="xy");abline(0,1)
 plot(mcols(dds)$dispMAP, disps$map, log="xy");abline(0,1)
